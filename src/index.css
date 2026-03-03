@@ -562,6 +562,8 @@ body {
   cursor: pointer;
   user-select: none;
   -webkit-user-select: none;
+  touch-action: none;
+  will-change: transform;
 }
 
 .flashcard-inner {
@@ -590,6 +592,8 @@ body {
   padding: 36px 32px;
   background: var(--bg-card);
   border: 1px solid var(--bg-glass-border);
+  backface-visibility: hidden !important;
+  -webkit-backface-visibility: hidden !important;
 }
 
 .flashcard-face::before {

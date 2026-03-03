@@ -28,10 +28,10 @@ export function FlashCardDirect({ card, flipped, onFlipChange, onSwipeLeft, onSw
         const velocityThreshold = 500
 
         if (offset.x < -swipeThreshold || velocity.x < -velocityThreshold) {
-            await animate(x, -600, { duration: 0.28, ease: 'easeIn' })
+            animate(x, -600, { duration: 0.28, ease: 'easeIn' })
             onSwipeLeft()
         } else if (offset.x > swipeThreshold || velocity.x > velocityThreshold) {
-            await animate(x, 600, { duration: 0.28, ease: 'easeIn' })
+            animate(x, 600, { duration: 0.28, ease: 'easeIn' })
             onSwipeRight()
         } else {
             isDragging.current = false
