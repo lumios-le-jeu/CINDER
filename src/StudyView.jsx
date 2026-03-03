@@ -15,37 +15,41 @@ function shuffleArray(arr) {
 function OnboardingOverlay({ onDismiss }) {
     return (
         <motion.div
-            className="onboarding-overlay"
+            className="onboarding-visual-overlay"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
+            onClick={onDismiss}
         >
+            <div className="onboarding-hints-container">
+                {/* Left Swipe Hint */}
+                <div className="onboarding-hint hint-left">
+                    <div className="hint-arrow yellow-glow">←</div>
+                    <div className="hint-label">Swipe à gauche pour<br /><strong>Réessayer plus tard</strong></div>
+                </div>
+
+                {/* Center Click Hint */}
+                <div className="onboarding-hint hint-center">
+                    <div className="hint-click-icon">👆</div>
+                    <div className="hint-label">Clique pour voir<br /><strong>La réponse</strong></div>
+                </div>
+
+                {/* Right Swipe Hint */}
+                <div className="onboarding-hint hint-right">
+                    <div className="hint-arrow yellow-glow">→</div>
+                    <div className="hint-label">Swipe à droite pour<br /><strong>Maîtrisé !</strong></div>
+                </div>
+            </div>
+
             <motion.div
-                className="onboarding-content"
-                initial={{ scale: 0.9, y: 20 }}
-                animate={{ scale: 1, y: 0 }}
+                className="onboarding-footer"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 1 }}
             >
-                <div className="onboarding-header">
-                    <div className="onboarding-icon">🔥</div>
-                    <h2>Prêt à swiper ?</h2>
-                </div>
-                <div className="onboarding-body">
-                    <div className="onboarding-step">
-                        <div className="step-icon">👆</div>
-                        <p>Clique sur la carte pour voir la réponse</p>
-                    </div>
-                    <div className="onboarding-gestures">
-                        <div className="gesture">
-                            <div className="gesture-arrow">←</div>
-                            <p><strong>Pas encore</strong><br />Reviendra plus tard</p>
-                        </div>
-                        <div className="gesture">
-                            <div className="gesture-arrow">→</div>
-                            <p><strong>Maîtrisé</strong><br />Retiré de la pile</p>
-                        </div>
-                    </div>
-                </div>
-                <button className="btn btn-primary" onClick={onDismiss}>C'est parti !</button>
+                <button className="btn btn-primary onboarding-close-btn" onClick={onDismiss}>
+                    J'ai compris
+                </button>
             </motion.div>
         </motion.div>
     )
