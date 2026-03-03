@@ -64,10 +64,13 @@ export function useStore() {
     ))
   }, [])
 
-  // Cloud Sharing Logic (KeyValue.xyz - CORS friendly)
+  // Cloud Sharing Logic (JSONBase - Stable & CORS friendly)
   const sharePile = useCallback(async (pileId) => {
     const pile = piles.find(p => p.id === pileId)
     if (!pile) throw new Error('Pile introuvable')
+
+    // Generate a 6-digit code for simplicity
+    const code = Math.floor(100000 + Math.random() * 900000).toString()
 
     const dataToShare = {
       name: pile.name,
@@ -75,40 +78,25 @@ export function useStore() {
       sharedAt: Date.now()
     }
 
-    // Creating a session first to get a key
-    // KeyValue.xyz is very open and works well for small JSON
-    const response = await fetch('https://api.keyvalue.xyz/new/cinder', {
-      method: 'POST'
-    })
-
-    if (!response.ok) throw new Error('Erreur lors de la création du canal de partage')
-
-    // The key is returned as a plain string in the format: https://api.keyvalue.xyz/KEY/SESSION
-    const fullUrl = await response.text()
-    const urlParts = fullUrl.trim().split('/')
-    const shareKey = urlParts[urlParts.length - 2]
-    const code = urlParts[urlParts.length - 1] // Using the session as the 6+ char code
-
-    // Now push the data
-    const updateRes = await fetch(`https://api.keyvalue.xyz/${shareKey}/${code}`, {
-      method: 'POST',
+    // JSONBase is extremely simple: PUT to save, GET to load
+    const response = await fetch(`https://jsonbase.com/cinder-piles/${code}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(dataToShare)
     })
 
-    if (!updateRes.ok) throw new Error('Erreur lors de l\'envoi des données')
+    if (!response.ok) throw new Error('Erreur lors du partage sur le cloud')
 
-    // Save the combined key to the pile
-    const finalCode = `${shareKey}:${code}`
-    setPiles(prev => prev.map(p => p.id === pileId ? { ...p, shareCode: finalCode } : p))
+    // Save the code to the pile so it's persistent locally
+    setPiles(prev => prev.map(p => p.id === pileId ? { ...p, shareCode: code } : p))
 
-    return finalCode
+    return code
   }, [piles])
 
-  const importPile = useCallback(async (fullCode) => {
-    if (!fullCode || !fullCode.includes(':')) throw new Error('Code invalide')
+  const importPile = useCallback(async (code) => {
+    if (!code || code.length < 4) throw new Error('Code trop court')
 
-    const [shareKey, code] = fullCode.split(':')
-    const response = await fetch(`https://api.keyvalue.xyz/${shareKey}/${code}`)
+    const response = await fetch(`https://jsonbase.com/cinder-piles/${code}`)
 
     if (!response.ok) {
       if (response.status === 404) throw new Error('Code introuvable ou expiré')
@@ -124,7 +112,7 @@ export function useStore() {
       emoji: getEmoji(data.name),
       cards: data.cards,
       known: [],
-      shareCode: fullCode,
+      shareCode: code,
       createdAt: Date.now()
     }
 
