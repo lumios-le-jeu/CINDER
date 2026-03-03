@@ -39,7 +39,7 @@ export default function App() {
         >
           <span className="header-logo-icon">🔥</span>
           <span className="header-logo-text">Cinder</span>
-          <span className="version-tag">v1.4</span>
+          <span className="version-tag">v1.5</span>
         </div>
         <div className="header-actions">
           {studyPile && (

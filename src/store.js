@@ -64,30 +64,35 @@ export function useStore() {
     ))
   }, [])
 
-  // Cloud Sharing Logic (restful-api.dev - Highly reliable & DNS/CORS friendly)
+  // Cloud Sharing Logic (JSONBlob with CORS Preflight Bypass)
   const sharePile = useCallback(async (pileId) => {
     const pile = piles.find(p => p.id === pileId)
     if (!pile) throw new Error('Pile introuvable')
 
-    // restful-api.dev expects a specific JSON structure: { name: "", data: {} }
-    const payload = {
+    const dataToShare = {
       name: pile.name,
-      data: {
-        cards: pile.cards,
-        sharedAt: Date.now()
-      }
+      cards: pile.cards,
+      sharedAt: Date.now()
     }
 
-    const response = await fetch('https://api.restful-api.dev/objects', {
+    // IMPORTANT: We DO NOT set 'Content-Type: application/json' here.
+    // By letting the browser default to 'text/plain', we perform a "Simple Request"
+    // which completely bypasses the CORS OPTIONS preflight check that was failing.
+    const response = await fetch('https://jsonblob.com/api/jsonBlob', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
+      headers: {
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify(dataToShare)
     })
 
     if (!response.ok) throw new Error('Erreur lors du partage sur le cloud')
 
-    const result = await response.json()
-    const code = result.id
+    // JSONBlob returns the created URL in the Location header
+    const location = response.headers.get('Location')
+    if (!location) throw new Error('Erreur serveur: Location header missing')
+
+    const code = location.split('/').pop()
 
     // Save the code to the pile so it's persistent locally
     setPiles(prev => prev.map(p => p.id === pileId ? { ...p, shareCode: code } : p))
@@ -98,21 +103,26 @@ export function useStore() {
   const importPile = useCallback(async (code) => {
     if (!code || code.length < 5) throw new Error('Code invalide')
 
-    const response = await fetch(`https://api.restful-api.dev/objects/${code}`)
+    const response = await fetch(`https://jsonblob.com/api/jsonBlob/${code}`, {
+      method: 'GET',
+      headers: {
+        'Accept': 'application/json'
+      }
+    })
 
     if (!response.ok) {
       if (response.status === 404) throw new Error('Code introuvable ou expiré')
       throw new Error('Erreur lors de la récupération de la pile')
     }
 
-    const result = await response.json()
-    if (!result.data || !result.data.cards) throw new Error('Format de données invalide')
+    const data = await response.json()
+    if (!data.name || !data.cards) throw new Error('Format de données invalide')
 
     const pile = {
       id: generateId(),
-      name: result.name || 'Pile importée',
-      emoji: getEmoji(result.name || 'Pile importée'),
-      cards: result.data.cards,
+      name: data.name,
+      emoji: getEmoji(data.name),
+      cards: data.cards,
       known: [],
       shareCode: code,
       createdAt: Date.now()
