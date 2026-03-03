@@ -658,17 +658,17 @@ body {
 }
 
 .swipe-overlay-left {
-  background: linear-gradient(135deg, rgba(0, 229, 160, 0.2), rgba(0, 180, 216, 0.1));
-  border: 3px solid var(--accent-green);
-  color: var(--accent-green);
-  box-shadow: var(--shadow-glow-green);
-}
-
-.swipe-overlay-right {
   background: linear-gradient(135deg, rgba(255, 71, 87, 0.2), rgba(255, 107, 53, 0.1));
   border: 3px solid var(--accent-red);
   color: var(--accent-red);
   box-shadow: var(--shadow-glow-red);
+}
+
+.swipe-overlay-right {
+  background: linear-gradient(135deg, rgba(0, 229, 160, 0.2), rgba(0, 180, 216, 0.1));
+  border: 3px solid var(--accent-green);
+  color: var(--accent-green);
+  box-shadow: var(--shadow-glow-green);
 }
 
 /* ===== ACTION BUTTONS ===== */
