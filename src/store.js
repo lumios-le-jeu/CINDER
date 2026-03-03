@@ -64,7 +64,7 @@ export function useStore() {
     ))
   }, [])
 
-  // Cloud Sharing Logic (JSONBlob)
+  // Cloud Sharing Logic (KeyValue.xyz - CORS friendly)
   const sharePile = useCallback(async (pileId) => {
     const pile = piles.find(p => p.id === pileId)
     if (!pile) throw new Error('Pile introuvable')
@@ -75,35 +75,40 @@ export function useStore() {
       sharedAt: Date.now()
     }
 
-    // Using JSONBlob - Very reliable for public JSON sharing
-    const response = await fetch('https://jsonblob.com/api/jsonBlob', {
+    // Creating a session first to get a key
+    // KeyValue.xyz is very open and works well for small JSON
+    const response = await fetch('https://api.keyvalue.xyz/new/cinder', {
+      method: 'POST'
+    })
+
+    if (!response.ok) throw new Error('Erreur lors de la création du canal de partage')
+
+    // The key is returned as a plain string in the format: https://api.keyvalue.xyz/KEY/SESSION
+    const fullUrl = await response.text()
+    const urlParts = fullUrl.trim().split('/')
+    const shareKey = urlParts[urlParts.length - 2]
+    const code = urlParts[urlParts.length - 1] // Using the session as the 6+ char code
+
+    // Now push the data
+    const updateRes = await fetch(`https://api.keyvalue.xyz/${shareKey}/${code}`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json'
-      },
       body: JSON.stringify(dataToShare)
     })
 
-    if (!response.ok) throw new Error('Erreur lors du partage sur le cloud')
+    if (!updateRes.ok) throw new Error('Erreur lors de l\'envoi des données')
 
-    // JSONBlob returns the location header which contains the ID
-    const location = response.headers.get('Location')
-    const code = location.split('/').pop()
+    // Save the combined key to the pile
+    const finalCode = `${shareKey}:${code}`
+    setPiles(prev => prev.map(p => p.id === pileId ? { ...p, shareCode: finalCode } : p))
 
-    // Save the code to the pile so it's persistent locally
-    setPiles(prev => prev.map(p => p.id === pileId ? { ...p, shareCode: code } : p))
-
-    return code
+    return finalCode
   }, [piles])
 
-  const importPile = useCallback(async (code) => {
-    // Basic validation of code (JSONBlob IDs are usually UUIDs/long strings)
-    if (!code || code.length < 5) throw new Error('Code invalide')
+  const importPile = useCallback(async (fullCode) => {
+    if (!fullCode || !fullCode.includes(':')) throw new Error('Code invalide')
 
-    const response = await fetch(`https://jsonblob.com/api/jsonBlob/${code}`, {
-      headers: { 'Accept': 'application/json' }
-    })
+    const [shareKey, code] = fullCode.split(':')
+    const response = await fetch(`https://api.keyvalue.xyz/${shareKey}/${code}`)
 
     if (!response.ok) {
       if (response.status === 404) throw new Error('Code introuvable ou expiré')
@@ -119,7 +124,7 @@ export function useStore() {
       emoji: getEmoji(data.name),
       cards: data.cards,
       known: [],
-      shareCode: code,
+      shareCode: fullCode,
       createdAt: Date.now()
     }
 
