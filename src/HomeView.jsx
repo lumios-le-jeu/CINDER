@@ -234,7 +234,7 @@ export function HomeView({ piles, addPile, deletePile, resetPile, sharePile, imp
             {/* Hero */}
             <div className="home-hero">
                 <h1>Apprends <span>comme un champion</span> 🔥</h1>
-                <p>Uploade tes fiches Excel et swipe pour retenir chaque notion.</p>
+                <p>Uploade tes fiches et swipe pour retenir chaque notion.</p>
             </div>
 
             {/* Actions Grid */}
