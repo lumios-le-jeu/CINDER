@@ -139,7 +139,7 @@ export function StudyView({ pile, onBack, onMarkKnown, onResetPile }) {
 
             {/* Card stack */}
             <div className="card-stack-area">
-                <AnimatePresence>
+                <AnimatePresence mode="wait">
                     {currentCard && (
                         <FlashCardDirect
                             key={cardKey}
