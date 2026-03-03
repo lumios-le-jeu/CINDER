@@ -12,6 +12,45 @@ function shuffleArray(arr) {
     return a
 }
 
+function OnboardingOverlay({ onDismiss }) {
+    return (
+        <motion.div
+            className="onboarding-overlay"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+        >
+            <motion.div
+                className="onboarding-content"
+                initial={{ scale: 0.9, y: 20 }}
+                animate={{ scale: 1, y: 0 }}
+            >
+                <div className="onboarding-header">
+                    <div className="onboarding-icon">🔥</div>
+                    <h2>Prêt à swiper ?</h2>
+                </div>
+                <div className="onboarding-body">
+                    <div className="onboarding-step">
+                        <div className="step-icon">👆</div>
+                        <p>Clique sur la carte pour voir la réponse</p>
+                    </div>
+                    <div className="onboarding-gestures">
+                        <div className="gesture">
+                            <div className="gesture-arrow">←</div>
+                            <p><strong>Pas encore</strong><br />Reviendra plus tard</p>
+                        </div>
+                        <div className="gesture">
+                            <div className="gesture-arrow">→</div>
+                            <p><strong>Maîtrisé</strong><br />Retiré de la pile</p>
+                        </div>
+                    </div>
+                </div>
+                <button className="btn btn-primary" onClick={onDismiss}>C'est parti !</button>
+            </motion.div>
+        </motion.div>
+    )
+}
+
 function CompletedView({ pile, onBack, onReset, totalCards }) {
     return (
         <div className="completed-view">
@@ -65,11 +104,20 @@ export function StudyView({ pile, onBack, onMarkKnown, onResetPile }) {
     const [completed, setCompleted] = useState(false)
     const [cardKey, setCardKey] = useState(0)
     const [flipped, setFlipped] = useState(false)
+    const [showOnboarding, setShowOnboarding] = useState(() => {
+        return !localStorage.getItem('cinder_onboarding_done')
+    })
+
+    const dismissOnboarding = () => {
+        localStorage.setItem('cinder_onboarding_done', 'true')
+        setShowOnboarding(false)
+    }
 
     const currentIdx = queue[0]
     const currentCard = currentIdx !== undefined ? pile.cards[currentIdx] : null
     const remaining = queue.length
     const totalCards = pile.cards.length
+    const currentNumber = totalCards - remaining + 1
 
     const handleRetry = useCallback(() => {
         setQueue(prev => {
@@ -122,7 +170,7 @@ export function StudyView({ pile, onBack, onMarkKnown, onResetPile }) {
                     <ArrowLeft size={18} />
                 </button>
                 <div className="study-title">{pile.emoji} {pile.name}</div>
-                <div className="study-counter">{remaining} / {totalCards}</div>
+                <div className="study-counter">{currentNumber} / {totalCards}</div>
             </div>
 
             {/* Swipe hints */}
@@ -154,11 +202,25 @@ export function StudyView({ pile, onBack, onMarkKnown, onResetPile }) {
             </div>
 
             {/* Action buttons */}
-            <ActionButtons
-                onRetry={handleRetry}
-                onFlip={() => setFlipped(f => !f)}
-                onCorrect={handleCorrect}
-            />
+            <AnimatePresence>
+                {flipped && (
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: 10 }}
+                    >
+                        <ActionButtons
+                            onRetry={handleRetry}
+                            onFlip={() => setFlipped(f => !f)}
+                            onCorrect={handleCorrect}
+                        />
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
+            <AnimatePresence>
+                {showOnboarding && <OnboardingOverlay onDismiss={dismissOnboarding} />}
+            </AnimatePresence>
 
             <div style={{ height: 8 }} />
         </div>
