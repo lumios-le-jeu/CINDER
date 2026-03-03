@@ -64,13 +64,10 @@ export function useStore() {
     ))
   }, [])
 
-  // Cloud Sharing Logic (Pantry)
+  // Cloud Sharing Logic (JSONBlob)
   const sharePile = useCallback(async (pileId) => {
     const pile = piles.find(p => p.id === pileId)
     if (!pile) throw new Error('Pile introuvable')
-
-    // Generate a 6-digit code
-    const code = Math.floor(100000 + Math.random() * 900000).toString()
 
     const dataToShare = {
       name: pile.name,
@@ -78,15 +75,21 @@ export function useStore() {
       sharedAt: Date.now()
     }
 
-    // Using Pantry Cloud (getpantry.cloud) - Reliable & CORS-friendly
-    const PANTRY_ID = '33ea061b-9076-4a4b-8e54-526bfd890040'
-    const response = await fetch(`https://getpantry.cloud/apiv1/pantry/${PANTRY_ID}/basket/${code}`, {
+    // Using JSONBlob - Very reliable for public JSON sharing
+    const response = await fetch('https://jsonblob.com/api/jsonBlob', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
       body: JSON.stringify(dataToShare)
     })
 
     if (!response.ok) throw new Error('Erreur lors du partage sur le cloud')
+
+    // JSONBlob returns the location header which contains the ID
+    const location = response.headers.get('Location')
+    const code = location.split('/').pop()
 
     // Save the code to the pile so it's persistent locally
     setPiles(prev => prev.map(p => p.id === pileId ? { ...p, shareCode: code } : p))
@@ -95,11 +98,15 @@ export function useStore() {
   }, [piles])
 
   const importPile = useCallback(async (code) => {
-    const PANTRY_ID = '33ea061b-9076-4a4b-8e54-526bfd890040'
-    const response = await fetch(`https://getpantry.cloud/apiv1/pantry/${PANTRY_ID}/basket/${code}`)
+    // Basic validation of code (JSONBlob IDs are usually UUIDs/long strings)
+    if (!code || code.length < 5) throw new Error('Code invalide')
+
+    const response = await fetch(`https://jsonblob.com/api/jsonBlob/${code}`, {
+      headers: { 'Accept': 'application/json' }
+    })
 
     if (!response.ok) {
-      if (response.status === 404) throw new Error('Code invalide ou expiré')
+      if (response.status === 404) throw new Error('Code introuvable ou expiré')
       throw new Error('Erreur lors de la récupération de la pile')
     }
 

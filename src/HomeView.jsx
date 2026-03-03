@@ -267,21 +267,20 @@ export function HomeView({ piles, addPile, deletePile, resetPile, sharePile, imp
                         <div className="import-input-wrapper">
                             <input
                                 type="text"
-                                maxLength={6}
-                                placeholder="Code (ex: 123456)"
+                                placeholder="Colle le code ici"
                                 value={importCode}
-                                onChange={e => setImportCode(e.target.value.replace(/\D/g, ''))}
+                                onChange={e => setImportCode(e.target.value)}
                                 onKeyDown={e => e.key === 'Enter' && handleImport()}
                             />
                             <button
                                 className="btn btn-primary btn-import"
                                 onClick={handleImport}
-                                disabled={importLoading || importCode.length !== 6}
+                                disabled={importLoading || !importCode.trim()}
                             >
                                 {importLoading ? '...' : <Download size={18} />}
                             </button>
                         </div>
-                        <p className="import-hint">Entre le code à 6 chiffres partagé par un ami.</p>
+                        <p className="import-hint">Entre le code partagé par un ami.</p>
                     </div>
                 </div>
             </div>
