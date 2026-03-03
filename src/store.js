@@ -89,6 +89,9 @@ export function useStore() {
 
     if (!response.ok) throw new Error('Erreur lors du partage sur le cloud')
 
+    // Save the code to the pile so it's persistent locally
+    setPiles(prev => prev.map(p => p.id === pileId ? { ...p, shareCode: code } : p))
+
     return code
   }, [piles])
 
@@ -104,11 +107,20 @@ export function useStore() {
     const data = await response.json()
     if (!data.name || !data.cards) throw new Error('Format de données invalide')
 
-    // Prevent duplicates if same name and cards exists? 
-    // For now just add it as a new pile
-    const newId = addPile(data.name, data.cards)
-    return newId
-  }, [addPile])
+    // Create the pile and store the code used to import it
+    const pile = {
+      id: generateId(),
+      name: data.name,
+      emoji: getEmoji(data.name),
+      cards: data.cards,
+      known: [],
+      shareCode: code, // Keep the code visible
+      createdAt: Date.now()
+    }
+
+    setPiles(prev => [...prev, pile])
+    return pile.id
+  }, [])
 
   return { piles, addPile, deletePile, resetPile, markKnown, sharePile, importPile }
 }

@@ -100,6 +100,17 @@ function PileCard({ pile, onStudy, onReset, onDelete, onShare }) {
                     />
                 </div>
                 <div className="pile-card-progress-text">{percent}% maîtrisé</div>
+
+                {pile.shareCode && (
+                    <div className="pile-card-code" onClick={(e) => {
+                        e.stopPropagation();
+                        navigator.clipboard.writeText(pile.shareCode);
+                    }} title="Cliquer pour copier le code">
+                        <span className="code-label">CODE:</span>
+                        <span className="code-value">{pile.shareCode}</span>
+                    </div>
+                )}
+
                 <div className="pile-card-actions">
                     <button
                         className="btn btn-primary"

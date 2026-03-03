@@ -671,6 +671,43 @@ body {
   box-shadow: var(--shadow-glow-green);
 }
 
+/* Code badge on card */
+.pile-card-code {
+  margin-top: 12px;
+  background: rgba(255, 107, 53, 0.1);
+  border: 1px solid rgba(255, 107, 53, 0.2);
+  border-radius: 8px;
+  padding: 6px 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  width: fit-content;
+}
+
+.pile-card-code:hover {
+  background: rgba(255, 107, 53, 0.15);
+  transform: translateY(-1px);
+}
+
+.code-label {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--accent-orange);
+  opacity: 0.8;
+  letter-spacing: 0.05em;
+}
+
+.code-value {
+  font-family: 'Outfit', sans-serif;
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--accent-orange);
+  letter-spacing: 1px;
+}
+
 /* ===== ACTION BUTTONS ===== */
 .action-buttons {
   display: flex;
