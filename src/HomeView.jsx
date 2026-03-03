@@ -213,8 +213,8 @@ export function HomeView({ piles, addPile, deletePile, resetPile, sharePile, imp
     }
 
     const handleImport = async () => {
-        if (importCode.length !== 6) {
-            addToast('Le code doit contenir 6 chiffres', 'error')
+        if (!importCode.trim()) {
+            addToast('Veuillez entrer un code', 'error')
             return
         }
         setImportLoading(true)
