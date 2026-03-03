@@ -64,28 +64,30 @@ export function useStore() {
     ))
   }, [])
 
-  // Cloud Sharing Logic (JSONBase - Stable & CORS friendly)
+  // Cloud Sharing Logic (restful-api.dev - Highly reliable & DNS/CORS friendly)
   const sharePile = useCallback(async (pileId) => {
     const pile = piles.find(p => p.id === pileId)
     if (!pile) throw new Error('Pile introuvable')
 
-    // Generate a 6-digit code for simplicity
-    const code = Math.floor(100000 + Math.random() * 900000).toString()
-
-    const dataToShare = {
+    // restful-api.dev expects a specific JSON structure: { name: "", data: {} }
+    const payload = {
       name: pile.name,
-      cards: pile.cards,
-      sharedAt: Date.now()
+      data: {
+        cards: pile.cards,
+        sharedAt: Date.now()
+      }
     }
 
-    // JSONBase is extremely simple: PUT to save, GET to load
-    const response = await fetch(`https://jsonbase.com/cinder-piles/${code}`, {
-      method: 'PUT',
+    const response = await fetch('https://api.restful-api.dev/objects', {
+      method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(dataToShare)
+      body: JSON.stringify(payload)
     })
 
     if (!response.ok) throw new Error('Erreur lors du partage sur le cloud')
+
+    const result = await response.json()
+    const code = result.id
 
     // Save the code to the pile so it's persistent locally
     setPiles(prev => prev.map(p => p.id === pileId ? { ...p, shareCode: code } : p))
@@ -94,23 +96,23 @@ export function useStore() {
   }, [piles])
 
   const importPile = useCallback(async (code) => {
-    if (!code || code.length < 4) throw new Error('Code trop court')
+    if (!code || code.length < 5) throw new Error('Code invalide')
 
-    const response = await fetch(`https://jsonbase.com/cinder-piles/${code}`)
+    const response = await fetch(`https://api.restful-api.dev/objects/${code}`)
 
     if (!response.ok) {
       if (response.status === 404) throw new Error('Code introuvable ou expiré')
       throw new Error('Erreur lors de la récupération de la pile')
     }
 
-    const data = await response.json()
-    if (!data.name || !data.cards) throw new Error('Format de données invalide')
+    const result = await response.json()
+    if (!result.data || !result.data.cards) throw new Error('Format de données invalide')
 
     const pile = {
       id: generateId(),
-      name: data.name,
-      emoji: getEmoji(data.name),
-      cards: data.cards,
+      name: result.name || 'Pile importée',
+      emoji: getEmoji(result.name || 'Pile importée'),
+      cards: result.data.cards,
       known: [],
       shareCode: code,
       createdAt: Date.now()
