@@ -64,7 +64,7 @@ export function useStore() {
     ))
   }, [])
 
-  // Cloud Sharing Logic (JSONBlob with CORS Preflight Bypass)
+  // Cloud Sharing Logic (Dpaste - Unbreakable CORS & DNS)
   const sharePile = useCallback(async (pileId) => {
     const pile = piles.find(p => p.id === pileId)
     if (!pile) throw new Error('Pile introuvable')
@@ -75,24 +75,29 @@ export function useStore() {
       sharedAt: Date.now()
     }
 
-    // IMPORTANT: We DO NOT set 'Content-Type: application/json' here.
-    // By letting the browser default to 'text/plain', we perform a "Simple Request"
-    // which completely bypasses the CORS OPTIONS preflight check that was failing.
-    const response = await fetch('https://jsonblob.com/api/jsonBlob', {
+    // Dpaste accepts Simple Requests (URLSearchParams) and perfectly echoes Origin CORS
+    const params = new URLSearchParams()
+    params.append('content', JSON.stringify(dataToShare))
+    params.append('expiry_days', '365')
+    params.append('syntax', 'json')
+
+    const response = await fetch('https://dpaste.com/api/v2/', {
       method: 'POST',
-      headers: {
-        'Accept': 'application/json'
-      },
-      body: JSON.stringify(dataToShare)
+      body: params
     })
 
     if (!response.ok) throw new Error('Erreur lors du partage sur le cloud')
 
-    // JSONBlob returns the created URL in the Location header
-    const location = response.headers.get('Location')
-    if (!location) throw new Error('Erreur serveur: Location header missing')
+    // Dpaste returns the URL in the Location header OR in the body text
+    let url = response.headers.get('Location')
+    if (!url) {
+      url = await response.text()
+    }
 
-    const code = location.split('/').pop()
+    if (!url) throw new Error('Impossible de lire le lien dpaste')
+
+    // Extract the code from https://dpaste.com/CODE or https://dpaste.com/CODE.txt
+    const code = url.trim().replace('.txt', '').split('/').pop()
 
     // Save the code to the pile so it's persistent locally
     setPiles(prev => prev.map(p => p.id === pileId ? { ...p, shareCode: code } : p))
@@ -103,12 +108,8 @@ export function useStore() {
   const importPile = useCallback(async (code) => {
     if (!code || code.length < 5) throw new Error('Code invalide')
 
-    const response = await fetch(`https://jsonblob.com/api/jsonBlob/${code}`, {
-      method: 'GET',
-      headers: {
-        'Accept': 'application/json'
-      }
-    })
+    // Dpaste gives raw content when appending .txt to the code
+    const response = await fetch(`https://dpaste.com/${code}.txt`)
 
     if (!response.ok) {
       if (response.status === 404) throw new Error('Code introuvable ou expiré')
