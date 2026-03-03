@@ -64,7 +64,7 @@ export function useStore() {
     ))
   }, [])
 
-  // Cloud Sharing Logic
+  // Cloud Sharing Logic (Pantry)
   const sharePile = useCallback(async (pileId) => {
     const pile = piles.find(p => p.id === pileId)
     if (!pile) throw new Error('Pile introuvable')
@@ -72,18 +72,17 @@ export function useStore() {
     // Generate a 6-digit code
     const code = Math.floor(100000 + Math.random() * 900000).toString()
 
-    // We only share the name and cards, not progress (known)
     const dataToShare = {
       name: pile.name,
       cards: pile.cards,
       sharedAt: Date.now()
     }
 
-    // Using kvdb.io for simple public storage
-    // Bucket ID is hardcoded for the app
-    const BUCKET = 'v1_cinder_piles_39281'
-    const response = await fetch(`https://kvdb.io/${BUCKET}/${code}`, {
+    // Using Pantry Cloud (getpantry.cloud) - Reliable & CORS-friendly
+    const PANTRY_ID = '33ea061b-9076-4a4b-8e54-526bfd890040'
+    const response = await fetch(`https://getpantry.cloud/apiv1/pantry/${PANTRY_ID}/basket/${code}`, {
       method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(dataToShare)
     })
 
@@ -96,8 +95,8 @@ export function useStore() {
   }, [piles])
 
   const importPile = useCallback(async (code) => {
-    const BUCKET = 'v1_cinder_piles_39281'
-    const response = await fetch(`https://kvdb.io/${BUCKET}/${code}`)
+    const PANTRY_ID = '33ea061b-9076-4a4b-8e54-526bfd890040'
+    const response = await fetch(`https://getpantry.cloud/apiv1/pantry/${PANTRY_ID}/basket/${code}`)
 
     if (!response.ok) {
       if (response.status === 404) throw new Error('Code invalide ou expiré')
@@ -107,14 +106,13 @@ export function useStore() {
     const data = await response.json()
     if (!data.name || !data.cards) throw new Error('Format de données invalide')
 
-    // Create the pile and store the code used to import it
     const pile = {
       id: generateId(),
       name: data.name,
       emoji: getEmoji(data.name),
       cards: data.cards,
       known: [],
-      shareCode: code, // Keep the code visible
+      shareCode: code,
       createdAt: Date.now()
     }
 
