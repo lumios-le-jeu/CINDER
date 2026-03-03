@@ -23,12 +23,14 @@ export function FlashCardDirect({ card, flipped, onFlipChange, onSwipeLeft, onSw
     }, [])
 
     const handleDragEnd = useCallback(async (_, info) => {
-        const threshold = 90
-        const { offset } = info
-        if (offset.x < -threshold) {
+        const { offset, velocity } = info
+        const swipeThreshold = 90
+        const velocityThreshold = 500
+
+        if (offset.x < -swipeThreshold || velocity.x < -velocityThreshold) {
             await animate(x, -600, { duration: 0.28, ease: 'easeIn' })
             onSwipeLeft()
-        } else if (offset.x > threshold) {
+        } else if (offset.x > swipeThreshold || velocity.x > velocityThreshold) {
             await animate(x, 600, { duration: 0.28, ease: 'easeIn' })
             onSwipeRight()
         } else {
@@ -65,6 +67,7 @@ export function FlashCardDirect({ card, flipped, onFlipChange, onSwipeLeft, onSw
                 transition={{ type: 'spring', stiffness: 280, damping: 22 }}
                 onClick={handleClick}
                 whileTap={{ cursor: 'grabbing' }}
+                style={{ x, y, rotate, zIndex: 10, touchAction: 'none' }}
             >
                 {/* Retry overlay */}
                 <motion.div className="swipe-overlay swipe-overlay-left" style={{ opacity: retryOpacity }}>
