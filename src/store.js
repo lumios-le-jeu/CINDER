@@ -3,18 +3,18 @@ import * as XLSX from 'xlsx'
 
 const STORAGE_KEY = 'cinder_piles'
 
-function generateId () {
+function generateId() {
   return Math.random().toString(36).slice(2) + Date.now().toString(36)
 }
 
-function getEmoji (name) {
+function getEmoji(name) {
   const emojis = ['📚', '🧠', '🔬', '📐', '🗺️', '⚗️', '💡', '🎯', '🏛️', '🌍', '🧮', '📊']
   let hash = 0
   for (let i = 0; i < name.length; i++) hash = (hash + name.charCodeAt(i)) % emojis.length
   return emojis[hash]
 }
 
-function loadPiles () {
+function loadPiles() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
     return raw ? JSON.parse(raw) : []
@@ -23,11 +23,11 @@ function loadPiles () {
   }
 }
 
-function savePiles (piles) {
+function savePiles(piles) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(piles))
 }
 
-export function useStore () {
+export function useStore() {
   const [piles, setPiles] = useState(loadPiles)
 
   // Persist whenever piles change
@@ -64,10 +64,56 @@ export function useStore () {
     ))
   }, [])
 
-  return { piles, addPile, deletePile, resetPile, markKnown }
+  // Cloud Sharing Logic
+  const sharePile = useCallback(async (pileId) => {
+    const pile = piles.find(p => p.id === pileId)
+    if (!pile) throw new Error('Pile introuvable')
+
+    // Generate a 6-digit code
+    const code = Math.floor(100000 + Math.random() * 900000).toString()
+
+    // We only share the name and cards, not progress (known)
+    const dataToShare = {
+      name: pile.name,
+      cards: pile.cards,
+      sharedAt: Date.now()
+    }
+
+    // Using kvdb.io for simple public storage
+    // Bucket ID is hardcoded for the app
+    const BUCKET = 'v1_cinder_piles_39281'
+    const response = await fetch(`https://kvdb.io/${BUCKET}/${code}`, {
+      method: 'POST',
+      body: JSON.stringify(dataToShare)
+    })
+
+    if (!response.ok) throw new Error('Erreur lors du partage sur le cloud')
+
+    return code
+  }, [piles])
+
+  const importPile = useCallback(async (code) => {
+    const BUCKET = 'v1_cinder_piles_39281'
+    const response = await fetch(`https://kvdb.io/${BUCKET}/${code}`)
+
+    if (!response.ok) {
+      if (response.status === 404) throw new Error('Code invalide ou expiré')
+      throw new Error('Erreur lors de la récupération de la pile')
+    }
+
+    const data = await response.json()
+    if (!data.name || !data.cards) throw new Error('Format de données invalide')
+
+    // Prevent duplicates if same name and cards exists? 
+    // For now just add it as a new pile
+    const newId = addPile(data.name, data.cards)
+    return newId
+  }, [addPile])
+
+  return { piles, addPile, deletePile, resetPile, markKnown, sharePile, importPile }
 }
 
-export function parseExcel (file) {
+export function parseExcel(file) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader()
     reader.onload = (e) => {

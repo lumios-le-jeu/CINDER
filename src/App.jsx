@@ -6,7 +6,7 @@ import { HomeView } from './HomeView'
 import { StudyView } from './StudyView'
 
 export default function App() {
-  const { piles, addPile, deletePile, resetPile, markKnown } = useStore()
+  const { piles, addPile, deletePile, resetPile, markKnown, sharePile, importPile } = useStore()
   const { toasts, addToast } = useToast()
   const [studyPileId, setStudyPileId] = useState(null)
 
@@ -81,6 +81,8 @@ export default function App() {
               addPile={addPile}
               deletePile={deletePile}
               resetPile={resetPile}
+              sharePile={sharePile}
+              importPile={importPile}
               onStudy={handleStudy}
               addToast={addToast}
             />
