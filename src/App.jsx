@@ -46,7 +46,7 @@ export default function App() {
         >
           <span className="header-logo-icon">🔥</span>
           <span className="header-logo-text">Cinder</span>
-          <span className="version-tag">v2.4</span>
+          <span className="version-tag">v2.5</span>
         </div>
         <div className="header-actions">
           <button className="btn" style={{ marginRight: studyPile ? '10px' : '0' }} onClick={() => setLang(lang === 'FR' ? 'EN' : 'FR')} title={t('Changer de langue', 'Change language')}>
