@@ -12,7 +12,7 @@ function shuffleArray(arr) {
     return a
 }
 
-function OnboardingOverlay({ onDismiss }) {
+function OnboardingOverlay({ onDismiss, t }) {
     return (
         <motion.div
             className="onboarding-visual-overlay"
@@ -25,19 +25,19 @@ function OnboardingOverlay({ onDismiss }) {
                 {/* Left Swipe Hint */}
                 <div className="onboarding-hint hint-left">
                     <div className="hint-arrow yellow-glow">←</div>
-                    <div className="hint-label">Swipe à gauche pour<br /><strong>Réessayer plus tard</strong></div>
+                    <div className="hint-label">{t ? t("Swipe à gauche pour", "Swipe left to") : "Swipe à gauche pour"}<br /><strong>{t ? t("Réessayer plus tard", "Retry later") : "Réessayer plus tard"}</strong></div>
                 </div>
 
                 {/* Center Click Hint */}
                 <div className="onboarding-hint hint-center">
                     <div className="hint-click-icon">👆</div>
-                    <div className="hint-label">Clique pour voir<br /><strong>La réponse</strong></div>
+                    <div className="hint-label">{t ? t("Clique pour voir", "Click to see") : "Clique pour voir"}<br /><strong>{t ? t("La réponse", "The answer") : "La réponse"}</strong></div>
                 </div>
 
                 {/* Right Swipe Hint */}
                 <div className="onboarding-hint hint-right">
                     <div className="hint-arrow yellow-glow">→</div>
-                    <div className="hint-label">Swipe à droite pour<br /><strong>Maîtrisé !</strong></div>
+                    <div className="hint-label">{t ? t("Swipe à droite pour", "Swipe right for") : "Swipe à droite pour"}<br /><strong>{t ? t("Maîtrisé !", "Mastered!") : "Maîtrisé !"}</strong></div>
                 </div>
             </div>
 
@@ -48,14 +48,14 @@ function OnboardingOverlay({ onDismiss }) {
                 transition={{ delay: 1 }}
             >
                 <button className="btn btn-primary onboarding-close-btn" onClick={onDismiss}>
-                    J'ai compris
+                    {t ? t("J'ai compris", "Got it") : "J'ai compris"}
                 </button>
             </motion.div>
         </motion.div>
     )
 }
 
-function CompletedView({ pile, onBack, onReset, totalCards }) {
+function CompletedView({ pile, onBack, onReset, totalCards, t }) {
     return (
         <div className="completed-view">
             <motion.div
@@ -72,26 +72,26 @@ function CompletedView({ pile, onBack, onReset, totalCards }) {
                 transition={{ delay: 0.3 }}
                 style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}
             >
-                <div className="completed-title">Pile terminée !</div>
+                <div className="completed-title">{t ? t("Pile terminée !", "Deck completed!") : "Pile terminée !"}</div>
                 <div className="completed-subtitle">
-                    Tu maîtrises toutes les cartes de <strong>"{pile.name}"</strong> 🎉
+                    {t ? t("Tu maîtrises toutes les cartes de", "You have mastered all cards in") : "Tu maîtrises toutes les cartes de"} <strong>"{pile.name}"</strong> 🎉
                 </div>
                 <div className="completed-stats">
                     <div className="stat-box">
                         <div className="stat-value">{totalCards}</div>
-                        <div className="stat-label">Cartes</div>
+                        <div className="stat-label">{t ? t("Cartes", "Cards") : "Cartes"}</div>
                     </div>
                     <div className="stat-box">
                         <div className="stat-value">100%</div>
-                        <div className="stat-label">Maîtrisé</div>
+                        <div className="stat-label">{t ? t("Maîtrisé", "Mastered") : "Maîtrisé"}</div>
                     </div>
                 </div>
                 <div className="completed-actions">
                     <button className="btn btn-primary" onClick={onBack} id="back-home">
-                        <ArrowLeft size={16} /> Retour aux piles
+                        <ArrowLeft size={16} /> {t ? t("Retour aux piles", "Back to decks") : "Retour aux piles"}
                     </button>
                     <button className="btn" onClick={onReset} id="restart-pile">
-                        <RotateCcw size={16} /> Recommencer depuis zéro
+                        <RotateCcw size={16} /> {t ? t("Recommencer depuis zéro", "Start from scratch") : "Recommencer depuis zéro"}
                     </button>
                 </div>
             </motion.div>
@@ -99,7 +99,7 @@ function CompletedView({ pile, onBack, onReset, totalCards }) {
     )
 }
 
-export function StudyView({ pile, onBack, onMarkKnown, onResetPile }) {
+export function StudyView({ pile, onBack, onMarkKnown, onResetPile, t }) {
     const [queue, setQueue] = useState(() =>
         shuffleArray(
             pile.cards.map((_, i) => i).filter(i => !pile.known.includes(i))
@@ -161,6 +161,7 @@ export function StudyView({ pile, onBack, onMarkKnown, onResetPile }) {
                     onBack={onBack}
                     onReset={handleReset}
                     totalCards={totalCards}
+                    t={t}
                 />
             </div>
         )
@@ -170,7 +171,7 @@ export function StudyView({ pile, onBack, onMarkKnown, onResetPile }) {
         <div className="view study-view">
             {/* Top Bar */}
             <div className="study-header">
-                <button className="btn btn-icon" onClick={onBack} id="back-btn" title="Retour">
+                <button className="btn btn-icon" onClick={onBack} id="back-btn" title={t ? t("Retour", "Back") : "Retour"}>
                     <ArrowLeft size={18} />
                 </button>
                 <div className="study-title">{pile.emoji} {pile.name}</div>
@@ -181,10 +182,10 @@ export function StudyView({ pile, onBack, onMarkKnown, onResetPile }) {
             <div className="swipe-hints">
                 <div className="swipe-hint swipe-hint-left">
                     <div className="swipe-hint-dot" />
-                    Swipe ← Pas encore
+                    Swipe ← {t ? t("Pas encore", "Not yet") : "Pas encore"}
                 </div>
                 <div className="swipe-hint swipe-hint-right">
-                    Swipe → Maîtrisé
+                    Swipe → {t ? t("Maîtrisé", "Mastered") : "Maîtrisé"}
                     <div className="swipe-hint-dot" />
                 </div>
             </div>
@@ -223,7 +224,7 @@ export function StudyView({ pile, onBack, onMarkKnown, onResetPile }) {
             </AnimatePresence>
 
             <AnimatePresence>
-                {showOnboarding && <OnboardingOverlay onDismiss={dismissOnboarding} />}
+                {showOnboarding && <OnboardingOverlay onDismiss={dismissOnboarding} t={t} />}
             </AnimatePresence>
 
             <div style={{ height: 8 }} />

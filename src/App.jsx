@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { useStore } from './store'
 import { useToast, ToastContainer } from './toast'
@@ -9,6 +9,13 @@ export default function App() {
   const { piles, addPile, deletePile, resetPile, markKnown, sharePile, importPile } = useStore()
   const { toasts, addToast } = useToast()
   const [studyPileId, setStudyPileId] = useState(null)
+  const [lang, setLang] = useState(() => localStorage.getItem('cinder_lang') || 'FR')
+  
+  useEffect(() => {
+    localStorage.setItem('cinder_lang', lang)
+  }, [lang])
+  
+  const t = useCallback((fr, en) => lang === 'EN' ? en : fr, [lang])
 
   const handleStudy = useCallback((pile) => {
     setStudyPileId(pile.id)
@@ -39,12 +46,15 @@ export default function App() {
         >
           <span className="header-logo-icon">🔥</span>
           <span className="header-logo-text">Cinder</span>
-          <span className="version-tag">v2.3</span>
+          <span className="version-tag">v2.4</span>
         </div>
         <div className="header-actions">
+          <button className="btn" style={{ marginRight: studyPile ? '10px' : '0' }} onClick={() => setLang(lang === 'FR' ? 'EN' : 'FR')} title={t('Changer de langue', 'Change language')}>
+            {lang === 'FR' ? '🇬🇧 EN' : '🇫🇷 FR'}
+          </button>
           {studyPile && (
             <button className="btn" onClick={handleBack} id="nav-home">
-              ← Mes piles
+              {t('← Mes piles', '← My decks')}
             </button>
           )}
         </div>
@@ -66,6 +76,7 @@ export default function App() {
               onBack={handleBack}
               onMarkKnown={markKnown}
               onResetPile={resetPile}
+              t={t}
             />
           </motion.div>
         ) : (
@@ -86,6 +97,7 @@ export default function App() {
               importPile={importPile}
               onStudy={handleStudy}
               addToast={addToast}
+              t={t}
             />
           </motion.div>
         )}
