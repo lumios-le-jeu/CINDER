@@ -293,8 +293,8 @@ export function HomeView({ piles, addPile, deletePile, resetPile, sharePile, imp
                                     <h3>{loading ? (t ? t('Chargement…', 'Loading...') : 'Chargement…') : (t ? t('Glisse ton fichier Excel ici', 'Drop your Excel file here') : 'Glisse ton fichier Excel ici')}</h3>
                                     <p>{t ? t('ou clique pour parcourir', 'or click to browse') : 'ou clique pour parcourir'}</p>
                                     <a 
-                                        href="/template.xlsx" 
-                                        download 
+                                        href="https://github.com/lumios-le-jeu/CINDER/raw/main/template.xlsx" 
+                                        download="template.xlsx" 
                                         className="btn btn-secondary mt-2" 
                                         style={{ display: 'inline-block', position: 'relative', zIndex: 10, marginTop: '15px' }}
                                         onClick={e => e.stopPropagation()}
